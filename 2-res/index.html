@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Pull & Response</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Başlık ve Yönerge -->
+        <header>
+            <h1>The Pull & Response</h1>
+            <p class="subtitle">Every action expects a response. Pull the node and let go.</p>
+        </header>
+
+        <!-- Etkileşim Alanı (Canvas) -->
+        <main>
+            <canvas id="interactiveCanvas"></canvas>
+        </main>
+
+        <!-- Durum ve Geri Bildirim Alanı -->
+        <footer>
+            <div id="stateIndicator" class="state-label">State: Calm</div>
+            <div id="responseOutput" class="response-text">Waiting for input...</div>
+            <button id="resetButton" class="reset-btn">Reset Dialogue</button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
