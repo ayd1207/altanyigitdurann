@@ -3,17 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Persistent Trace & Feedback Experiment</title>
+    <title>The Drift Anchor — Feedback Loop Experience</title>
     <style>
-        :root {
-            --bg-color: #0d0d0d;
-            --surface-color: #161616;
-            --border-color: #2c2c2c;
-            --text-primary: #f0f0f0;
-            --text-secondary: #888888;
-            --accent: #22c55e;
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -21,9 +12,9 @@
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b0f19;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -31,265 +22,269 @@
             overflow: hidden;
         }
 
-        .experiment-container {
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             width: 100%;
-            max-width: 720px;
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+            max-width: 800px;
+            padding: 20px;
+            gap: 15px;
         }
 
-        .experiment-header {
-            margin-bottom: 1rem;
+        .header {
+            text-align: center;
         }
 
-        .experiment-header h1 {
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin-bottom: 0.2rem;
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: #f8fafc;
+            margin-bottom: 4px;
         }
 
-        .subtitle {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
+        .header p {
+            font-size: 0.9rem;
+            color: #94a3b8;
         }
 
-        .canvas-wrapper {
+        .arena {
             position: relative;
-            background: #050505;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-            height: 360px;
-        }
-
-        canvas {
-            display: block;
             width: 100%;
-            height: 100%;
-            cursor: crosshair;
+            height: 400px;
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
-        .status-banner {
+        /* Güvenli Koridor Alanı */
+        .safe-corridor {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: rgba(22, 22, 22, 0.85);
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            letter-spacing: 0.03em;
+            top: 0;
+            bottom: 0;
+            left: calc(50% - 75px);
+            width: 150px;
+            background: rgba(30, 41, 59, 0.4);
+            border-left: 1px dashed rgba(75, 85, 99, 0.4);
+            border-right: 1px dashed rgba(75, 85, 99, 0.4);
         }
 
-        .experiment-footer {
+        /* Hareketli Nesne (Node) */
+        #node {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            background: #38bdf8;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px #38bdf8;
+            transition: background-color 0.2s;
+        }
+
+        .score-display {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(17, 24, 39, 0.75);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            border: 1px solid #374151;
+            z-index: 10;
+        }
+
+        .footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1rem;
+            width: 100%;
+            padding: 0 5px;
         }
 
-        .btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
+        .controls-hint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        kbd {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #e2e8f0;
+        }
+
+        .reset-button {
+            background: #1f2937;
+            color: #e2e8f0;
+            border: 1px solid #374151;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s;
         }
 
-        .btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .metrics {
-            display: flex;
-            gap: 1.5rem;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .metrics strong {
-            color: var(--text-primary);
+        .reset-button:hover {
+            background: #374151;
         }
     </style>
 </head>
 <body>
-    <main class="experiment-container">
-        <header class="experiment-header">
-            <h1>Persistent Trace & Feedback</h1>
-            <p class="subtitle">Drag across the canvas to paint and accumulate selection paths. Visited nodes turn green and persist.</p>
+    <div class="app-container">
+        <header class="header">
+            <h1>The Drift Anchor</h1>
+            <p>Keep the node inside the safe central corridor using A/D keys.</p>
         </header>
 
-        <div class="canvas-wrapper">
-            <canvas id="trailCanvas"></canvas>
-            <div id="statusBanner" class="status-banner" aria-live="polite">State: Ready (Draw to trace)</div>
-        </div>
-
-        <footer class="experiment-footer">
-            <button id="clearBtn" class="btn">Clear Trails</button>
-            <div class="metrics">
-                <span>Active Traces: <strong id="traceCountVal">0</strong></span>
-                <span>System Memory: <strong id="memoryVal">Clean</strong></span>
+        <main class="arena" id="arena">
+            <div class="safe-corridor"></div>
+            <div id="node"></div>
+            <div class="score-display">
+                Stability: <span id="stabilityVal">100</span>%
             </div>
+        </main>
+
+        <footer class="footer">
+            <div class="controls-hint">
+                <span><strong>Controls:</strong> <kbd>A</kbd> / <kbd>D</kbd> or <kbd>Left</kbd> / <kbd>Right</kbd> | <strong>Reset:</strong> <kbd>R</kbd></span>
+            </div>
+            <button id="resetBtn" class="reset-button">Reset Experience</button>
         </footer>
-    </main>
+    </div>
 
     <script>
+        /**
+         * THE DRIFT ANCHOR - DOM Version (Sıfır hata garantili saf JS mimarisi)
+         */
+
+        // ==========================================
+        // 1. DESIGN (Ayarlanabilir Parametreler)
+        // ==========================================
         const DESIGN = {
-            gridSpacing: 25,
-            selectionRadius: 35,
-            colors: {
-                background: '#050505',
-                nodeDefault: 'rgba(255, 255, 255, 0.12)',
-                nodeSelected: '#22c55e',
-                cursorTrail: 'rgba(34, 197, 94, 0.4)'
-            }
+            nodeMass: 1.5,          // Atalet katsayısı
+            enginePower: 0.45,      // Tuş basma kuvveti
+            friction: 0.94,         // Sürtünme
+            currentChangeSpeed: 0.03, // Rüzgar değişim hızı
+            maxCurrentForce: 0.7,   // Maksimum gizli rüzgar
+            corridorHalfWidth: 75   // Güvenli bölge yarıçapı
         };
 
+        // ==========================================
+        // 2. state (Durum Yönetimi)
+        // ==========================================
         let state = {
-            nodes: [],
-            isDrawing: false,
-            lastX: 0,
-            lastY: 0,
-            activeTracesCount: 0
+            x: 0,       // Merkezden uzaklık (piksel cinsinden ofset)
+            vx: 0,      // Hız
+            currentX: 0,// Gizli rüzgar
+            targetCurrentX: 0,
+            keys: { left: false, right: false },
+            stability: 100
         };
 
-        const canvas = document.getElementById('trailCanvas');
-        const ctx = canvas.getContext('2d');
-        const clearBtn = document.getElementById('clearBtn');
-        const statusBanner = document.getElementById('statusBanner');
-        const traceCountVal = document.getElementById('traceCountVal');
-        const memoryVal = document.getElementById('memoryVal');
+        const arena = document.getElementById('arena');
+        const nodeEl = document.getElementById('node');
+        const stabilityValEl = document.getElementById('stabilityVal');
+        const resetBtn = document.getElementById('resetBtn');
 
-        function initGrid() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-
-            state.nodes = [];
-            for (let x = DESIGN.gridSpacing; x < canvas.width; x += DESIGN.gridSpacing) {
-                for (let y = DESIGN.gridSpacing; y < canvas.height; y += DESIGN.gridSpacing) {
-                    state.nodes.push({
-                        x: x,
-                        y: y,
-                        selected: false,
-                        intensity: 0.0
-                    });
-                }
-            }
-            state.activeTracesCount = 0;
-            updateMetrics();
+        // Başlangıçta tam ortala
+        function initPosition() {
+            state.x = 0;
+            state.vx = 0;
+            state.currentX = 0;
+            state.stability = 100;
         }
+        initPosition();
 
-        function initInput() {
-            canvas.addEventListener('pointerdown', (e) => {
-                state.isDrawing = true;
-                const rect = canvas.getBoundingClientRect();
-                state.lastX = e.clientX - rect.left;
-                state.lastY = e.clientY - rect.top;
-                processSelection(state.lastX, state.lastY);
-                statusBanner.textContent = "State: Tracing & Accumulating Data";
-            });
+        // ==========================================
+        // 3. input (Girdi Yönetimi)
+        // ==========================================
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = true;
+            if (e.key === 'r' || e.key === 'R') initPosition();
+        });
 
-            canvas.addEventListener('pointermove', (e) => {
-                if (!state.isDrawing) return;
-                const rect = canvas.getBoundingClientRect();
-                let x = e.clientX - rect.left;
-                let y = e.clientY - rect.top;
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = false;
+        });
 
-                processSelection(x, y);
-                state.lastX = x;
-                state.lastY = y;
-            });
+        resetBtn.addEventListener('click', initPosition);
 
-            window.addEventListener('pointerup', () => {
-                state.isDrawing = false;
-                statusBanner.textContent = "State: Idle (Selections Preserved)";
-            });
-
-            clearBtn.addEventListener('click', () => {
-                state.nodes.forEach(n => {
-                    n.selected = false;
-                    n.intensity = 0.0;
-                });
-                state.activeTracesCount = 0;
-                updateMetrics();
-                statusBanner.textContent = "State: Memory Cleared";
-            });
-        }
-
-        function processSelection(x, y) {
-            state.nodes.forEach(node => {
-                let dx = node.x - x;
-                let dy = node.y - y;
-                let dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < DESIGN.selectionRadius) {
-                    if (!node.selected) {
-                        node.selected = true;
-                        state.activeTracesCount++;
-                    }
-                    node.intensity = 1.0;
-                }
-            });
-            updateMetrics();
-        }
-
+        // ==========================================
+        // 4. rule (Fizik ve Kurallar)
+        // ==========================================
         function updatePhysics() {
-            state.nodes.forEach(node => {
-                if (node.intensity > 0.0) {
-                    node.intensity -= 0.02;
-                    if (node.intensity < 0.0) node.intensity = 0.0;
-                }
-            });
+            // Gizli rüzgarı periyodik olarak değiştir
+            if (Math.random() < 0.02) {
+                state.targetCurrentX = (Math.random() * 2 - 1) * DESIGN.maxCurrentForce;
+            }
+            state.currentX += (state.targetCurrentX - state.currentX) * DESIGN.currentChangeSpeed;
+
+            // Kullanıcı kuvveti
+            let userForce = 0;
+            if (state.keys.left) userForce -= DESIGN.enginePower;
+            if (state.keys.right) userForce += DESIGN.enginePower;
+
+            // Toplam ivme ve hız
+            const accel = (userForce + state.currentX) / DESIGN.nodeMass;
+            state.vx += accel;
+            state.vx *= DESIGN.friction;
+            state.x += state.vx;
+
+            // Sınırlar (Arena genişliğinin dışına çıkmasın)
+            const maxLimit = (arena.clientWidth / 2) - 20;
+            if (state.x < -maxLimit) { state.x = -maxLimit; state.vx *= -0.4; }
+            if (state.x > maxLimit) { state.x = maxLimit; state.vx *= -0.4; }
+
+            // Kararlılık (Stability) hesaplama
+            const inCorridor = Math.abs(state.x) <= DESIGN.corridorHalfWidth;
+            if (inCorridor) {
+                state.stability = Math.min(100, state.stability + 0.4);
+            } else {
+                state.stability = Math.max(0, state.stability - 0.9);
+            }
+            stabilityValEl.textContent = Math.round(state.stability);
         }
 
-        function renderOutput() {
-            ctx.fillStyle = DESIGN.colors.background;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ==========================================
+        // 5. output (Görselleştirme / Render)
+        // ==========================================
+        function render() {
+            // Nesneyi merkez ofsetine göre konumlandır
+            const arenaCenter = arena.clientWidth / 2;
+            nodeEl.style.left = `${arenaCenter + state.x}px`;
 
-            state.nodes.forEach(node => {
-                ctx.beginPath();
-                if (node.selected) {
-                    let radius = 3 + (node.intensity * 3);
-                    ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
-                    ctx.fillStyle = DESIGN.colors.nodeSelected;
-                    ctx.shadowColor = DESIGN.colors.nodeSelected;
-                    ctx.shadowBlur = 8 * node.intensity;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                } else {
-                    ctx.arc(node.x, node.y, 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = DESIGN.colors.nodeDefault;
-                    ctx.fill();
-                }
-            });
+            // Gizli akıntının şiddetine göre nesnenin rengini değiştir (Geri bildirim)
+            const intensity = Math.abs(state.currentX);
+            if (intensity > 0.4) {
+                nodeEl.style.backgroundColor = '#f43f5e'; // Sert akıntı (Kırmızımsı)
+                nodeEl.style.boxShadow = '0 0 15px #f43f5e';
+            } else {
+                nodeEl.style.backgroundColor = '#38bdf8'; // Normal akıntı (Mavi)
+                nodeEl.style.boxShadow = '0 0 15px #38bdf8';
+            }
         }
 
-        function updateMetrics() {
-            traceCountVal.textContent = state.activeTracesCount;
-            memoryVal.textContent = state.activeTracesCount > 50 ? "Dense (Accumulating)" : state.activeTracesCount > 0 ? "Active" : "Clean";
-        }
-
+        // Ana Döngü
         function loop() {
             updatePhysics();
-            renderOutput();
+            render();
             requestAnimationFrame(loop);
         }
 
-        window.addEventListener('load', () => {
-            initGrid();
-            initInput();
-            loop();
-        });
+        requestAnimationFrame(loop);
     </script>
 </body>
 </html>
